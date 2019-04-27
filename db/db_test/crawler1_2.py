@@ -1,5 +1,4 @@
 import httplib2
-import rocksdb
 from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
 from nltk.tokenize import sent_tokenize, word_tokenize
