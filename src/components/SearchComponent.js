@@ -1,18 +1,39 @@
 import React, { Component } from 'react';
 import { Input, Button, Form, Label, Col, Row, Modal, ModalBody, ModalHeader, ModalFooter, InputGroup, InputGroupAddon, InputGroupText } from 'reactstrap';
-import { searchEngine } from './searchEngine';
-import { getAllKeywords } from './helper';
+import { searchEngine } from '../shared/searchEngine';
 import SpeechRec from './SpeechRecComponent';
+import { server_link } from '../shared/server_link';
 
 class RenderSearchResult extends Component {
   constructor(props) {
     super(props);
     this.state = {
       result: this.props.result,
+      isTFModalOpen: false,
+      isNLModalOpen: false,
+      isPLModalOpen: false,
     }
     this.searchSimilar = this.searchSimilar.bind(this);
     this.handleSearch = this.handleSearch.bind(this);
     this.setQuery = this.setQuery.bind(this);
+    this.toggleTFModal = this.toggleTFModal.bind(this);
+    this.toggleNLModal = this.toggleNLModal.bind(this);
+    this.togglePLModal = this.togglePLModal.bind(this);
+  }
+  toggleTFModal(){
+    this.setState({
+      isTFModalOpen: !this.state.isTFModalOpen
+    });
+  }
+  toggleNLModal(){
+    this.setState({
+      isNLModalOpen: !this.state.isNLModalOpen
+    });
+  }
+  togglePLModal(){
+    this.setState({
+      isPLModalOpen: !this.state.isPLModalOpen
+    });
   }
   handleSearch() {
     return this.props.handleSearch()
@@ -21,12 +42,14 @@ class RenderSearchResult extends Component {
     return this.props.setQuery(query)
   }
   searchSimilar() {
-    let new_query = this.state.result.keywords.slice(0).sort((a, b) => a.tf > b.tf ? 1 : (a.tf < b.tf ? -1 : 0)).slice(0, 5).map(a => a.keyword).join(" ");
+    let new_query = this.state.result.keywords.slice(0).sort((a, b) => a.tf < b.tf ? 1 : (a.tf > b.tf ? -1 : 0)).slice(0, 5).map(a => a.keyword).join(" ");
     this.setQuery(new_query);
     this.handleSearch();
     console.log(this.state.result.keywords);
   }
   render() {
+    const kws = this.state.result.keywords.map((kw_list) => kw_list.keyword + ' ' + kw_list.tf).join(', ');
+    const nls = this.state.result.next_links.map((nl) => <p>{nl}</p>);
     return (
       <div className="row border-top">
         <div className="col-2">
@@ -35,16 +58,49 @@ class RenderSearchResult extends Component {
         </div>
         <div className="col-8 offset-1 text-left">
           <p><b>Page Title</b>: {this.state.result.page_title}</p>
-          <p><b>url</b>: <a href={this.state.result.url} target="_blank" rel="noopener noreferrer">{this.state.result.url}</a></p>
-          <p><b>Last Modification Date</b>: {this.state.result.last_modification_date}</p>
-          <p><b>Size of page</b>: {this.state.result.size_of_page}</p>
+          <p><b>url</b>: <a href={this.state.result.doc_url} target="_blank" rel="noopener noreferrer">{this.state.result.doc_url}</a></p>
+          <p><b>Last Modification Date</b>: {this.state.result.last_modified}</p>
+          <p><b>Size of page</b>: {this.state.result.doc_size}</p>
+          <Button onClick={this.toggleTFModal} className="mb-2 mr-2">
+            Show Keywords and Term frequencies
+          </Button>
+          <Modal isOpen={this.state.isTFModalOpen} toggle={this.toggleTFModal}>
+            <ModalHeader toggle={this.toggleTFModal}>
+            Keywords and Term frequencies
+            </ModalHeader>
+            <ModalBody>
+              {kws}
+            </ModalBody>
+          </Modal>
+          <Button onClick={this.togglePLModal} className="mb-2 mr-2">
+            Show Parent links
+          </Button>
+          <Modal isOpen={this.state.isPLModalOpen} toggle={this.togglePLModal}>
+            <ModalHeader toggle={this.togglePLModal}>
+            Parent links
+            </ModalHeader>
+            <ModalBody>
+              {nls}
+            </ModalBody>
+          </Modal>
+          <Button onClick={this.toggleNLModal} className="mb-2 mr-2">
+            Show Child links
+          </Button>
+          <Modal isOpen={this.state.isNLModalOpen} toggle={this.toggleNLModal}>
+            <ModalHeader toggle={this.toggleNLModal}>
+            Child links
+            </ModalHeader>
+            <ModalBody>
+              {nls}
+            </ModalBody>
+          </Modal>
         </div>
       </div>
     )
   }
 }
 
-class Main extends Component {
+class Search extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -105,9 +161,17 @@ class Main extends Component {
     this.handleSearch(event);
   }
   handleSearch(event) {
-    let result = searchEngine(this.state.query.value);
-    console.log(result);
-    this.setState({ result: result })
+    let query = this.state.query;
+    console.log("query", query);
+    if (typeof query !== 'undefined'){
+      searchEngine(query).then(result => {
+        // console.log(result);
+        this.setState({ result: result })
+      });
+    }
+    // let result = searchEngine(this.state.query.value);
+    // console.log(result);
+    // this.setState({ result: result });
     if (typeof event !== 'undefined') event.preventDefault();
   }
   setQuery(query) {
@@ -161,7 +225,7 @@ class Main extends Component {
     this.setState({ allKeywordsSelected: [...this.state.allKeywordsSelected] });
   }
   fetchAllKeywords() {
-    fetch("http://localhost:8001/all_keywords", {
+    fetch(server_link + "/all_keywords", {
       method: "GET",
     }).then(response => response.json())
       .then(response => { this.setState({ all_keywords: response.all_keywords }) })
@@ -292,4 +356,4 @@ class Main extends Component {
   }
 }
 
-export default Main;
+export default Search;
