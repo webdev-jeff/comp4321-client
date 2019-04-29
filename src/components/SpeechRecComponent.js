@@ -42,7 +42,7 @@ class SpeechRec extends Component {
                 id="speechRecBtn"
                 title="Click to speak&#13;Click to stop"
                 color="primary">
-          <i class="fa fa-microphone"></i>
+          <i className="fa fa-microphone"></i>
         </Button>
      )
     }

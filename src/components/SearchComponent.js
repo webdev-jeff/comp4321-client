@@ -11,8 +11,7 @@ import {
   ModalHeader,
   ModalFooter,
   InputGroup,
-  InputGroupAddon,
-  InputGroupText
+  InputGroupAddon
 } from "reactstrap";
 import { searchEngine } from "../shared/searchEngine";
 import SpeechRec from "./SpeechRecComponent";
@@ -49,8 +48,8 @@ class RenderSearchResult extends Component {
       isPLModalOpen: !this.state.isPLModalOpen
     });
   }
-  handleSearch() {
-    return this.props.handleSearch();
+  handleSearch(query) {
+    return this.props.handleSearch(query);
   }
   setQuery(query) {
     return this.props.setQuery(query);
@@ -63,7 +62,7 @@ class RenderSearchResult extends Component {
       .map(a => a.keyword)
       .join(" ");
     this.setQuery(new_query);
-    this.handleSearch();
+    this.handleSearch(new_query);
     console.log(this.state.result.keywords);
   }
   render() {
@@ -71,6 +70,7 @@ class RenderSearchResult extends Component {
       .map(kw_list => kw_list.keyword + " " + kw_list.tf)
       .join(", ");
     const nls = this.state.result.next_links.map(nl => <p>{nl}</p>);
+    // const pls = this.state.result.parent_links.map(pl => <p>{pl}</p>);
     return (
       <div className="row border-top">
         <div className="col-2">
@@ -181,7 +181,7 @@ class Search extends Component {
       });
     }
     if (typeof event !== "undefined") event.preventDefault();
-    this.handleSearch(event);
+    this.handleSearch(event, query);
   }
   handleResearch(event) {
     let query = this.state.searchHistorySelected
@@ -190,7 +190,7 @@ class Search extends Component {
     this.setQuery(query);
     this.toggleModal();
     if (typeof event !== "undefined") event.preventDefault();
-    this.handleSearch(event);
+    this.handleSearch(event, query);
   }
   handleSearchAllKeywordsSelected(event) {
     let query = this.state.allKeywordsSelected
@@ -198,10 +198,10 @@ class Search extends Component {
       .join(" ");
     this.setQuery(query);
     if (typeof event !== "undefined") event.preventDefault();
-    this.handleSearch(event);
+    this.handleSearch(event, query);
   }
-  handleSearch(event) {
-    let query = this.state.query;
+  handleSearch(event, query) {
+    // let query = this.state.query;
     console.log("query", query);
     if (typeof query !== "undefined") {
       searchEngine(query).then(result => {
@@ -337,7 +337,7 @@ class Search extends Component {
 
     return (
       <div className="container-fluid ml-0 mr-0" style={{ height: "100vh" }}>
-        <div className="row" style={{ height: "100%" }}>
+        <div className="row mt-2" style={{ height: "100%" }}>
           <div
             className="col-10"
             style={{ overflowY: "scroll", height: "100%" }}
