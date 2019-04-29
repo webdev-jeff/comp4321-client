@@ -38,18 +38,18 @@ const test_return = [
 // }
 
 const fetch = require("node-fetch");
+const stemmer = require("stemmer");
 
-var N; // num_documnents
-var docs;
-var score = [];
-var rank;
-var top_N = 50;
+let N; // num_documnents
+let docs;
+let rank;
+let top_N = 50;
 // var query = ["research", "step", "in"];
 let startTime = Date.now();
 
 function contain(doc, item) {
-  var keywords = doc.keywords;
-  for (var i = 0; i < keywords.length; i++) {
+  let keywords = doc.keywords;
+  for (let i = 0; i < keywords.length; i++) {
     if (keywords[i].keyword === item) {
       return true;
     }
@@ -225,7 +225,15 @@ function intersectionKeys(set, obj) {
   return new Set(Object.keys(obj).filter(k => set.has(k)));
 }
 
+function stemList(list) {
+  for (let i = 0; i < list.length; i++) {
+    list[i] = stemmer(list[i]);
+  }
+  return list;
+}
+
 export function searchEngine(query_raw) {
+  let score = [];
   let query_list = query_raw.split('"');
   let phrase_list = [];
   let non_phrase_list = [];
@@ -233,16 +241,19 @@ export function searchEngine(query_raw) {
     if (i % 2 === 0) {
       //0,2,4,...: non-phrase
       non_phrase_list = non_phrase_list
-        .concat(query_list[i].split(/\s+/i))
+        .concat(stemList(query_list[i].split(/\s+/i)))
         .filter(n => n);
     } else {
       //1,3,...: phrase
-      phrase_list.push('"' + query_list[i] + '"');
+      phrase_list.push(
+        '"' + stemList(query_list[i].split(/\s+/i)).join(" ") + '"'
+      );
     }
   }
   console.log("phrase_list: ", phrase_list);
   console.log("non_phrase_list: ", non_phrase_list);
   let query = non_phrase_list.concat(phrase_list);
+  console.log("query after stemming: ", query);
   let x = fetch(server_link + "/all_doc", {
     method: "GET"
     // headers: { "Content-Type": "application/json" },
@@ -264,12 +275,14 @@ export function searchEngine(query_raw) {
 
       // prepare the parameters
       N = docs.length;
+      console.log("Number of documents: ", N);
       // console.log(a);
 
       // get started!
       for (let i = 0; i < N; i++) {
         score.push(0);
       }
+      // console.log("score before calculating tfidf: ", score);
 
       //use a map to deal with query loop
       let queryMap = query.map(item => {
@@ -299,6 +312,7 @@ export function searchEngine(query_raw) {
 
       //wait for all the queries to be done
       await Promise.all(queryMap);
+      // console.log("score before remove NaN: ", score);
 
       for (let i = 0; i < N; i++) {
         if (isNaN(score[i])) {
