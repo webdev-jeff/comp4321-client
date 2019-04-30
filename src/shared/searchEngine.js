@@ -1,4 +1,5 @@
 import { server_link } from "./server_link";
+// const server_link = "http://2ca6c744.ngrok.io";
 const test_return = [
   {
     _id: "0",
@@ -43,6 +44,9 @@ const stemmer = require("stemmer");
 let N; // num_documnents
 let docs;
 let rank;
+let top_id_list;
+let top_doc_list = [];
+let final_list = [];
 let top_N = 50;
 // var query = ["research", "step", "in"];
 let startTime = Date.now();
@@ -57,9 +61,22 @@ function contain(doc, item) {
   return false;
 }
 
+function contain_in_title(doc, item) {
+  let title = doc.toLowerCase();
+  item = item.toLowerCase();
+  let words = title.split(" ");
+  //console.log(words);
+  for (let i = 0; i < words.length; i++) {
+    if (item === words[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function calculate_idf(item) {
-  var count = 0;
-  for (var i = 0; i < N; i++) {
+  let count = 0;
+  for (let i = 0; i < N; i++) {
     if (contain(docs[i], item)) {
       count += 1;
     }
@@ -70,11 +87,11 @@ function calculate_idf(item) {
 
 function tf_in_document(doc, item) {
   //var normalize_factor = 0;
-  var keywords = doc.keywords;
+  const keywords = doc.keywords;
   // fetch keywords of specific doc
-  var sum = 0;
-  var tf_raw = 0;
-  for (var i = 0; i < keywords.length; i++) {
+  let sum = 0;
+  let tf_raw = 0;
+  for (let i = 0; i < keywords.length; i++) {
     sum += keywords[i].tf * keywords[i].tf;
     if (keywords[i].keyword === item) {
       tf_raw = keywords[i].tf;
@@ -233,6 +250,8 @@ function stemList(list) {
 }
 
 export function searchEngine(query_raw) {
+  // function searchEngine(query_raw) {
+  console.log("query_raw: ", query_raw);
   let score = [];
   let query_list = query_raw.split('"');
   let phrase_list = [];
@@ -325,28 +344,70 @@ export function searchEngine(query_raw) {
 
       let id_score = [];
       for (let i = 0; i < N; i++) {
-        id_score.push([i, score[i]]);
+        id_score.push([parseInt(docs[i]._id), score[i]]);
       }
       // console.log(id_score);
       // console.log(score.sort(function(a, b){return b-a}));
-      rank = id_score.sort(function(a, b) {
-        return b[1] - a[1];
+
+      // New(with favoring title matches):
+      // Calculate the similarity between the query and page title
+      let title_score = [];
+      for (let i = 0; i < N; i++) {
+        let count = 0;
+        for (let j = 0; j < query.length; j++) {
+          if (contain_in_title(docs[i].page_title, query[j])) {
+            count += 1;
+          }
+        }
+        title_score.push([parseInt(docs[i]._id), docs[i].page_title, count]);
+      }
+
+      // Combine the similarity score and page title rank
+      for (let i = 0; i < N; i++) {
+        final_list.push([
+          id_score[i][0],
+          title_score[i][1],
+          id_score[i][1] + title_score[i][2]
+        ]);
+      }
+      //console.log(final_list);
+
+      final_list.sort(function(a, b) {
+        return b[2] - a[2];
       });
-      // console.log(rank);
+      //console.log(final_list);
 
       let top = Math.min(top_N, N);
-      // console.log(top_list);
-      let top_id_list = rank.slice(0, top);
-      let top_doc_list = [];
-      for (let i = 0; i < top_id_list.length; i++) {
-        let index = top_id_list[i][0];
+      let top_final_list = final_list.slice(0, top);
+
+      for (let i = 0; i < top_final_list.length; i++) {
+        let index = top_final_list[i][0];
         // console.log(index);
         top_doc_list.push(docs[index]);
       }
+      console.log("top_final_list: ", top_doc_list);
       return top_doc_list;
+
+      // // Old(without favoring title matches):
+      // rank = id_score.sort(function(a, b) {
+      //   return b[1] - a[1];
+      // });
+      // // console.log(rank);
+      // let top = Math.min(top_N, N);
+      // // console.log(top_list);
+      // let top_id_list = rank.slice(0, top);
+      // let top_doc_list = [];
+      // for (let i = 0; i < top_id_list.length; i++) {
+      //   let index = top_id_list[i][0];
+      //   // console.log(index);
+      //   top_doc_list.push(docs[index]);
+      // }
+      // console.log("top_doc_list: ", top_doc_list);
+      // return top_doc_list;
     })
     .catch(e =>
       console.error("TODO handle error in function searchEngine " + e)
     );
   return x;
 }
+searchEngine('super search "computer science"');
