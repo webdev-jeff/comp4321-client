@@ -45,7 +45,6 @@ let N; // num_documnents
 let docs;
 let rank;
 let top_id_list;
-let top_doc_list = [];
 let final_list = [];
 let top_N = 50;
 // var query = ["research", "step", "in"];
@@ -253,6 +252,7 @@ export function searchEngine(query_raw) {
   // function searchEngine(query_raw) {
   console.log("query_raw: ", query_raw);
   let score = [];
+  let top_doc_list = [];
   let query_list = query_raw.split('"');
   let phrase_list = [];
   let non_phrase_list = [];
@@ -340,7 +340,7 @@ export function searchEngine(query_raw) {
       }
 
       console.log("TIMER: Printing score ", Date.now() - startTime);
-      console.log("score: ", score);
+      // console.log("score: ", score);
 
       let id_score = [];
       for (let i = 0; i < N; i++) {
@@ -375,16 +375,18 @@ export function searchEngine(query_raw) {
       final_list.sort(function(a, b) {
         return b[2] - a[2];
       });
-      //console.log(final_list);
+      console.log(final_list);
 
       let top = Math.min(top_N, N);
       let top_final_list = final_list.slice(0, top);
 
       for (let i = 0; i < top_final_list.length; i++) {
         let index = top_final_list[i][0];
-        // console.log(index);
-        top_doc_list.push(docs[index]);
+        for (let j = 0; j < N; j++) {
+          if (parseInt(docs[j]._id) === index) top_doc_list.push(docs[j]);
+        }
       }
+
       console.log("top_final_list: ", top_doc_list);
       return top_doc_list;
 
@@ -410,4 +412,4 @@ export function searchEngine(query_raw) {
     );
   return x;
 }
-searchEngine('super search "computer science"');
+// searchEngine('"undergraduate research"');
