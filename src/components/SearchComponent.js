@@ -204,10 +204,17 @@ class Search extends Component {
     // let query = this.state.query;
     console.log("query", query);
     if (typeof query !== "undefined") {
-      searchEngine(query).then(result => {
-        // console.log(result);
-        this.setState({ result: result });
-      });
+      searchEngine(query)
+        .then(result => {
+          // console.log(result);
+          if (result === undefined) {
+            throw new Error("result is undefined");
+          }
+          this.setState({ result: result });
+        })
+        .catch(err => {
+          console.log("Caught an error in search engine!! ", err);
+        });
     }
     // let result = searchEngine(this.state.query.value);
     // console.log(result);
