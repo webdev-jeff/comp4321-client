@@ -425,7 +425,7 @@ class Search extends Component {
               id="searchBarInAllKeywords"
               placeholder="Search in all keywords"
               className="mb-3" /> */}
-            <div style={{ overflowY: "scroll", height: "100%" }}>
+            <div style={{ overflowY: "scroll", height: "80%" }}>
               {all_keywords_render}
             </div>
           </div>
