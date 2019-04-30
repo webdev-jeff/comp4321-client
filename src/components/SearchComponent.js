@@ -70,7 +70,7 @@ class RenderSearchResult extends Component {
       .map(kw_list => kw_list.keyword + " " + kw_list.tf)
       .join(", ");
     const nls = this.state.result.next_links.map(nl => <p>{nl}</p>);
-    // const pls = this.state.result.parent_links.map(pl => <p>{pl}</p>);
+    const pls = this.state.result.parent_links.map(pl => <p>{pl}</p>);
     return (
       <div className="row border-top">
         <div className="col-2">
@@ -113,7 +113,7 @@ class RenderSearchResult extends Component {
           </Button>
           <Modal isOpen={this.state.isPLModalOpen} toggle={this.togglePLModal}>
             <ModalHeader toggle={this.togglePLModal}>Parent links</ModalHeader>
-            <ModalBody>{nls}</ModalBody>
+            <ModalBody>{pls}</ModalBody>
           </Modal>
           <Button onClick={this.toggleNLModal} className="mb-2 mr-2">
             Show Child links
@@ -212,7 +212,7 @@ class Search extends Component {
     // let result = searchEngine(this.state.query.value);
     // console.log(result);
     // this.setState({ result: result });
-    if (typeof event !== "undefined") event.preventDefault();
+    // if (typeof event !== "undefined") event.preventDefault();
   }
   setQuery(query) {
     document.getElementById("query").value = query;
