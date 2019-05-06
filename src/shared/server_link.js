@@ -1,1 +1,1 @@
-export const server_link = "http://2ca6c744.ngrok.io";
+export const server_link = "http://localhost:8000";

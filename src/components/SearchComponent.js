@@ -216,6 +216,10 @@ class Search extends Component {
           console.log("Caught an error in search engine!! ", err);
         });
     }
+    this.setState({
+      searchHistorySelected: [],
+      allKeywordsSelected: []
+    })
     // let result = searchEngine(this.state.query.value);
     // console.log(result);
     // this.setState({ result: result });
@@ -359,7 +363,7 @@ class Search extends Component {
                     <Col className="col-7">
                       {this.state.speechRec ? (
                         <InputGroup>
-                          <Input type="text" id="query" name="query" />
+                          <Input type="text" id="query" name="query" onKeyPress={(event) => event.key === 'enter' ? this.handleSubmit : null}/>
                           <InputGroupAddon addonType="append">
                             <SpeechRec setQuery={this.setQuery} />
                           </InputGroupAddon>
